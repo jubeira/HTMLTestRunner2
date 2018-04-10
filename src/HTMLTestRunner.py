@@ -1,5 +1,6 @@
 import StringIO
 import datetime
+import os
 import sys
 import unittest
 from xml.sax import saxutils
@@ -7,6 +8,8 @@ from xml.sax import saxutils
 __author__ = "Wai Yip Tung"
 __version__ = "2.0.0"
 
+FILE_PATH = os.path.dirname(__file__)
+RESOURCES_ROOT = os.path.join(FILE_PATH, 'resources')
 
 # TODO: color stderr
 # TODO: simplify javascript using , more than 1 class in the class attribute?
@@ -109,46 +112,46 @@ class TemplateMixin(object):
     # ------------------------------------------------------------------- #
 
     # variables: (title, generator, stylesheet, heading, report, ending)
-    HTML_TEMPLATE = open('templates/report.html', 'r').read().encode('utf-8')
+    HTML_TEMPLATE = open(os.path.join(RESOURCES_ROOT, 'templates/report.html'), 'r').read().encode('utf-8')
 
     # ------------------------------------------------------------------- #
     # Stylesheet
     # ------------------------------------------------------------------- #
     # alternatively use a <link> for external style sheet, e.g.
     #   <link rel="stylesheet" href="$url" type="text/css">
-    STYLESHEET_TEMPLATE = open('templates/head_inserts.html', 'r').read() \
+    STYLESHEET_TEMPLATE = open(os.path.join(RESOURCES_ROOT, 'templates/head_inserts.html'), 'r').read() \
         .encode('utf-8')
 
     # ------------------------------------------------------------------- #
     # Heading
     # ------------------------------------------------------------------- #
     # variables: (title, parameters, description)
-    HEADING_TEMPLATE = open('templates/header.html', 'r').read() \
+    HEADING_TEMPLATE = open(os.path.join(RESOURCES_ROOT, 'templates/header.html'), 'r').read() \
         .encode('utf-8')
 
     # variables: (name, value)
-    HEADING_ATTRIBUTE_TEMPLATE = open('templates/header_parameters.html', 'r')\
+    HEADING_ATTRIBUTE_TEMPLATE = open(os.path.join(RESOURCES_ROOT, 'templates/header_parameters.html'), 'r')\
         .read().encode('utf-8')
 
     # ------------------------------------------------------------------- #
     # Report
     # ------------------------------------------------------------------- #
     # variables: (test_list, count, Pass, fail, error, skip)
-    REPORT__TABLE_TEMPLATE = open('templates/result_table.html', 'r') \
+    REPORT__TABLE_TEMPLATE = open(os.path.join(RESOURCES_ROOT, 'templates/result_table.html'), 'r') \
         .read().encode('utf-8')
 
     # variables: (style, desc, count, Pass, fail, error, cid)
-    REPORT_CLASS_TEMPLATE = open('templates/test_class.html', 'r').read()\
+    REPORT_CLASS_TEMPLATE = open(os.path.join(RESOURCES_ROOT, 'templates/test_class.html'), 'r').read()\
         .encode('utf-8')
 
     # variables: (tid, Class, style, desc, status)
     REPORT_TEST_WITH_OUTPUT_TMPL = \
-        open('templates/report_test_with_output.html', 'r').read()\
+        open(os.path.join(RESOURCES_ROOT, 'templates/report_test_with_output.html'), 'r').read()\
         .encode('utf-8')
 
     # variables: (tid, Class, style, desc, status)
     REPORT_TEST_NO_OUTPUT_TEMPLATE = \
-        open('templates/report_test_no_output.html', 'r').read()\
+        open(os.path.join(RESOURCES_ROOT, 'templates/report_test_no_output.html'), 'r').read()\
         .encode('utf-8')
 
     # variables: (id, output)
@@ -157,7 +160,7 @@ class TemplateMixin(object):
     # ------------------------------------------------------------------- #
     # ENDING
     # ------------------------------------------------------------------- #
-    ENDING_TEMPLATE = open('templates/footer.html', 'r').read()\
+    ENDING_TEMPLATE = open(os.path.join(RESOURCES_ROOT, 'templates/footer.html'), 'r').read()\
         .encode('utf-8')
 
 
@@ -290,6 +293,20 @@ def sort_result(result_list):
     return r
 
 
+def fake_attrs():
+    g2attrs = [
+        ('My Project Name', 'Fake Project Name'),
+        ('Reponsible Team', 'Fake Team'),
+        ('Build Number', '42'),
+    ]
+    g3attrs = [
+        ('Product Under Test', 'The Fake Product Site'),
+        ('Product Team', 'Fake Product Team')
+    ]
+    attrs = {'group2': g2attrs, 'group3': g3attrs}
+    return attrs
+
+
 class HTMLTestRunner(TemplateMixin):
     def __init__(self, stream=sys.stdout, verbosity=1, title=None,
                  description=None, attrs=None):
@@ -305,6 +322,9 @@ class HTMLTestRunner(TemplateMixin):
             self.description = self.DEFAULT_DESCRIPTION
         else:
             self.description = description
+
+        if attrs is None:
+            attrs = fake_attrs()
 
         self.attributes = attrs
 
@@ -368,7 +388,7 @@ class HTMLTestRunner(TemplateMixin):
         self.stream.write(output.encode('utf8'))
 
     def _generate_stylesheet(self):
-        return self.STYLESHEET_TEMPLATE
+        return self.STYLESHEET_TEMPLATE % dict(root_dir=RESOURCES_ROOT)
 
     def _parse_attributes_group(self, group):
         attrs_list = []
